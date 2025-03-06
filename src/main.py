@@ -4,14 +4,11 @@
 
 # Python
 import argparse
-import os
-
-# Third-party
-import requests
 
 # Custom
 from custom_logger import get_custom_logger
-from utils import get_api_url, get_http_response
+from send_email import format_gmail_message, send_gmail_from_ppw
+from utils import get_env_var, get_news_api_endpoint, get_http_response, get_article_title_description_link
 
 # =============================================================================
 # Variables
@@ -20,12 +17,9 @@ from utils import get_api_url, get_http_response
 # Logging
 logger = get_custom_logger("data/configurations/logger.yaml")
 
-# Requests
-HEADERS = {
-"User-Agent": 
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
-}
-DEFAULT_URL = "https://newsapi.org/v2/everything?q=tesla&from=2025-02-06&sortBy=publishedAt"
+# SMTP emails
+SUBJECT = "Daily news email"
+BASE_MESSAGE = "To whom it may concern,\n\n Please find below the titles and descriptions of articles from the news that are of interest to you:\n\n"
 
 # =============================================================================
 # Programme exectuion
@@ -33,28 +27,40 @@ DEFAULT_URL = "https://newsapi.org/v2/everything?q=tesla&from=2025-02-06&sortBy=
 
 if __name__ == "__main__":
     
-    # =========================================================================
-    # Argument parsing
-    # =========================================================================
-
-    parser = argparse.ArgumentParser(description="url from which to request API data")
-    parser.add_argument("-u", "--url", type=str, required=False, help="url address")
+    # Parsed values
+    parser = argparse.ArgumentParser(description="endpoint from which to request API data")
+    parser.add_argument("-e", "--endpoint", type=str, required=False, help="endpoint URL address")
+    parser.add_argument("-t", "--topic", type=str, required=False, help="topic of news to be sent")
+    parser.add_argument("-n", "--number_articles", type=int, required=False, help="number of articles to be emailed")
     args = parser.parse_args()
-    url = args.url
+    endpoint = args.endpoint
+    topic = args.topic
+    number_articles = args.number_articles
     
-    # =========================================================================
-    # Programme
-    # =========================================================================
+    # Get ENV vars
+    username = get_env_var("GMAIL_USERNAME")
+    password = get_env_var("GMAIL_PASSWORD")
+    api_key = get_env_var("NEWS_API_KEY")
     
-    # Logger entry
-    logger.info(f"Sending daily news email...")
-    
-    # If no URL parsed
-    if url is None:
-        url = get_api_url(url=DEFAULT_URL)
+    # If no URL or topic parsed
+    if endpoint is None and topic is not None:
+        endpoint = get_news_api_endpoint(api_key=api_key, topic=topic)
+    elif endpoint is None and topic is None:
+        endpoint = get_news_api_endpoint(api_key=api_key)
 
     # Get content of HTTP response
-    content = get_http_response(url=url, headers=HEADERS)
+    content = get_http_response(url=endpoint)
+    # If no number_articles parsed
+    if number_articles is not None:
+        raw_message = f"{BASE_MESSAGE}{get_article_title_description_link(content=content, number_articles=number_articles)}"
+    else:
+        raw_message = f"{BASE_MESSAGE}{get_article_title_description_link(content=content)}"
     
-    #logger exit
-    logger.info(f"Sent daily news email")
+    # Email
+    if raw_message != BASE_MESSAGE:
+        logger.info(f"Sending daily news email...")
+        message = format_gmail_message(subject=SUBJECT, sender=username, receiver=username,message=raw_message )
+        send_gmail_from_ppw(username=username, password=password, message=message)
+        logger.info(f"Sent daily news email")
+    else:
+        logger.info(f"No news to send in email")
