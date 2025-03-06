@@ -169,3 +169,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Log filees
+*.log
+
+# Python venv directory
+email-daily-news/
