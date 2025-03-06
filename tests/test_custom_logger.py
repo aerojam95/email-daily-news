@@ -2,15 +2,15 @@
 # Modules
 # =============================================================================
 
-# Python modules
+# Python 
 import logging
 import os
 import unittest
 
-# Third-party modules
+# Third-party 
 import yaml
 
-# Testing module
+# Testing
 from custom_logger import get_custom_logger
 
 # =============================================================================

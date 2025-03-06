@@ -50,7 +50,7 @@ def get_env_var(env_var:str):
         raise
     
 
-def get_news_api_endpoint(api_key:str, topic:str="tesla") -> str:
+def get_news_api_endpoint(api_key:str, topic="tesla") -> str:
     """Get URL which contains URL and API key to access endpoint URL
 
     Args:

@@ -17,7 +17,7 @@ from utils import get_env_var, get_news_api_endpoint, get_http_response, get_art
 # Logging
 logger = get_custom_logger("data/configurations/logger.yaml")
 
-# SMTP emails
+# SMTP email elements
 SUBJECT = "Daily news email"
 BASE_MESSAGE = "To whom it may concern,\n\n Please find below the titles and descriptions of articles from the news that are of interest to you:\n\n"
 
@@ -40,13 +40,14 @@ if __name__ == "__main__":
     # Get ENV vars
     username = get_env_var("GMAIL_USERNAME")
     password = get_env_var("GMAIL_PASSWORD")
-    api_key = get_env_var("NEWS_API_KEY")
     
     # If no URL or topic parsed
-    if endpoint is None and topic is not None:
-        endpoint = get_news_api_endpoint(api_key=api_key, topic=topic)
-    elif endpoint is None and topic is None:
-        endpoint = get_news_api_endpoint(api_key=api_key)
+    if endpoint is None:
+        api_key = get_env_var("NEWS_API_KEY")
+        if topic is not None:
+            endpoint = get_news_api_endpoint(api_key=api_key, topic=topic)
+        else:
+            endpoint = get_news_api_endpoint(api_key=api_key)
 
     # Get content of HTTP response
     content = get_http_response(url=endpoint)
@@ -58,9 +59,9 @@ if __name__ == "__main__":
     
     # Email
     if raw_message != BASE_MESSAGE:
-        logger.info(f"Sending daily news email...")
+        logger.info(f"Sending news articles email...")
         message = format_gmail_message(subject=SUBJECT, sender=username, receiver=username,message=raw_message )
         send_gmail_from_ppw(username=username, password=password, message=message)
-        logger.info(f"Sent daily news email")
+        logger.info(f"Sent news articles email")
     else:
-        logger.info(f"No news to send in email")
+        logger.info(f"No news articles to send in email")

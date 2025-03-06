@@ -2,17 +2,17 @@
 # Modules
 # =============================================================================
 
-# Python modules
+# Python
 from email.message import EmailMessage
 import smtplib
 import ssl
 import unittest
 from unittest.mock import patch, MagicMock
 
-# Third-party modules
+# Third-party
 import yaml
 
-# Testing module
+# Testing
 from send_email import format_gmail_message, send_gmail_from_ppw
 
 # =============================================================================
